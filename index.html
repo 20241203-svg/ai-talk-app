@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI トークアプリ</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,sans-serif;background:#f0f0f0;display:flex;justify-content:center;padding:1rem}
+#app{width:100%;max-width:420px}
+#setup-screen{background:#fff;border-radius:16px;padding:1.25rem}
+#setup-screen h2{font-size:16px;font-weight:500;margin-bottom:1rem}
+.section-label{font-size:12px;color:#888;margin-bottom:6px;margin-top:1rem}
+.preset-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.preset-btn{background:#f7f7f7;border:1px solid #e0e0e0;border-radius:10px;padding:10px 12px;cursor:pointer;text-align:left}
+.preset-btn.selected{border:2px solid #7F77DD;background:#EEEDFE}
+.preset-name{font-size:13px;font-weight:500}
+.preset-desc{font-size:11px;color:#888;margin-top:2px}
+.divider{text-align:center;font-size:12px;color:#bbb;margin:12px 0}
+input,textarea{width:100%;font-size:13px;padding:8px 10px;border-radius:10px;border:1px solid #e0e0e0;margin-bottom:8px;outline:none}
+textarea{height:72px;resize:none}
+#start-chat-btn{width:100%;padding:11px;font-size:14px;font-weight:500;border-radius:10px;border:none;background:#7F77DD;color:#fff;cursor:pointer;margin-top:12px}
+#chat-screen{display:none;flex-direction:column}
+#chat-header{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#fff;border-radius:16px;margin-bottom:8px}
+#header-avatar{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+#header-name{font-size:15px;font-weight:500}
+#header-status{font-size:11px;color:#888}
+#back-btn{margin-left:auto;font-size:12px;color:#888;background:none;border:none;cursor:pointer;padding:4px 8px}
+#messages{min-height:400px;max-height:500px;overflow-y:auto;padding:8px 4px;display:flex;flex-direction:column;gap:10px;margin-bottom:8px}
+.msg-row{display:flex;align-items:flex-end;gap:8px}
+.msg-row.me{flex-direction:row-reverse}
+.bubble-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.bubble{max-width:72%;padding:9px 13px;border-radius:18px;font-size:14px;line-height:1.6}
+.bubble.them{background:#fff;border-bottom-left-radius:4px}
+.bubble.me{background:#7F77DD;color:#fff;border-bottom-right-radius:4px}
+.bubble.typing{color:#aaa;font-style:italic}
+.msg-time{font-size:10px;color:#bbb;align-self:flex-end;flex-shrink:0}
+#input-area{display:flex;gap:8px;align-items:flex-end;background:#fff;border-radius:16px;padding:8px}
+#msg-input{flex:1;font-size:14px;padding:8px 12px;border-radius:20px;border:1px solid #e0e0e0;resize:none;max-height:100px;margin:0}
+#send-btn{width:38px;height:38px;border-radius:50%;background:#7F77DD;border:none;cursor:pointer;color:#fff;font-size:18px;flex-shrink:0}
+#send-btn:disabled{opacity:0.4}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="setup-screen">
+    <h2>トーク相手を設定する</h2>
+    <div class="section-label">あなたの名前</div>
+    <input id="myname-input" type="text" placeholder="例：たくや" maxlength="20" />
+    <div class="section-label">プリセットから選ぶ</div>
+    <div class="preset-grid" id="preset-grid"></div>
+    <div class="divider">または カスタムで作る</div>
+    <input id="c-name" type="text" placeholder="名前（例：さくら）" maxlength="20" />
+    <input id="c-emoji" type="text" placeholder="アイコン絵文字（例：🌸）" maxlength="4" />
+    <textarea id="c-personality" placeholder="性格・口調（例：明るくて少し天然。語尾に「ね〜」をつける）"></textarea>
+    <button id="start-chat-btn">トークを始める</button>
+  </div>
+  <div id="chat-screen">
+    <div id="chat-header">
+      <div id="header-avatar"></div>
+      <div><div id="header-name"></div><div id="header-status">オンライン</div></div>
+      <button id="back-btn">⚙ 設定</button>
+    </div>
+    <div id="messages"></div>
+    <div id="input-area">
+      <textarea id="msg-input" placeholder="メッセージを入力..." rows="1" maxlength="200"></textarea>
+      <button id="send-btn">➤</button>
+    </div>
+  </div>
+</div>
+<script>
+const PRESETS=[
+  {name:"あおい",emoji:"🌊",personality:"クールで知的な女の子。少し毒舌だけど本当は優しい。ため口で話す。",color:"#E6F1FB"},
+  {name:"れん",emoji:"🌙",personality:"穏やかでミステリアスな男の子。言葉少なめで詩的。でも相手を深く気にかける。",color:"#EEEDFE"},
+  {name:"はな",emoji:"🌸",personality:"明るく元気いっぱいの女の子。テンション高め、絵文字や！をよく使う。",color:"#FBEAF0"},
+  {name:"そうた",emoji:"☀️",personality:"サバサバしたスポーツ系男子。冗談好きでストレートに気持ちを言う。",color:"#FAEEDA"},
+];
+let selectedPreset=null,character=null,myName="あなた",history=[],sending=false;
+const presetGrid=document.getElementById('preset-grid');
+PRESETS.forEach(p=>{
+  const btn=document.createElement('button');
+  btn.className='preset-btn';
+  btn.innerHTML=`<div class="preset-name">${p.emoji} ${p.name}</div><div class="preset-desc">${p.personality.slice(0,20)}...</div>`;
+  btn.onclick=()=>{document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');selectedPreset=p;document.getElementById('c-name').value='';document.getElementById('c-emoji').value='';document.getElementById('c-personality').value='';};
+  presetGrid.appendChild(btn);
+});
+document.getElementById('start-chat-btn').onclick=()=>{
+  const mn=document.getElementById('myname-input').value.trim();
+  myName=mn||"あなた";
+  const cname=document.getElementById('c-name').value.trim();
+  const cemoji=document.getElementById('c-emoji').value.trim();
+  const cpersonality=document.getElementById('c-personality').value.trim();
+  if(cname&&cpersonality){character={name:cname,emoji:cemoji||'💬',personality:cpersonality,color:'#f0f0f0'};}
+  else if(selectedPreset){character=selectedPreset;}
+  else{alert('キャラクターを選ぶかカスタム設定を入力してください');return;}
+  history=[];
+  document.getElementById('messages').innerHTML='';
+  document.getElementById('header-avatar').textContent=character.emoji;
+  document.getElementById('header-avatar').style.background=character.color;
+  document.getElementById('header-name').textContent=character.name;
+  document.getElementById('setup-screen').style.display='none';
+  document.getElementById('chat-screen').style.display='flex';
+  setTimeout(()=>sendAI(null,true),600);
+};
+document.getElementById('back-btn').onclick=()=>{document.getElementById('chat-screen').style.display='none';document.getElementById('setup-screen').style.display='block';};
+function now(){return new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});}
+function addBubble(text,isMe,isTyping=false){
+  const msgs=document.getElementById('messages');
+  const row=document.createElement('div');
+  row.className='msg-row'+(isMe?' me':'');
+  const time=document.createElement('div');time.className='msg-time';time.textContent=now();
+  if(!isMe){const av=document.createElement('div');av.className='bubble-avatar';av.textContent=character.emoji;av.style.background=character.color;row.appendChild(av);}
+  const bub=document.createElement('div');
+  bub.className='bubble'+(isMe?' me':' them')+(isTyping?' typing':'');
+  bub.textContent=text;
+  row.appendChild(bub);row.appendChild(time);
+  msgs.appendChild(row);msgs.scrollTop=msgs.scrollHeight;
+  return bub;
+}
+async function sendAI(userMsg,isFirst=false){
+  if(sending)return;sending=true;
+  document.getElementById('send-btn').disabled=true;
+  const typingBub=addBubble('入力中...',false,true);
+  const systemPrompt=`あなたは「${character.name}」というキャラクターです。性格・口調: ${character.personality} 相手の名前: ${myName}。返答は1〜3文の短いメッセージ。地の文不要、セリフだけ返す。${isFirst?'最初の挨拶をキャラクターらしく送る。':''}`;
+  const msgs=isFirst?[{role:'user',content:'会話を始めてください'}]:[...history,{role:'user',content:userMsg}];
+  try{
+    const res=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:systemPrompt,messages:msgs})});
+    const data=await res.json();
+    const reply=data.reply||'（エラー）';
+    typingBub.parentElement.remove();
+    addBubble(reply,false);
+    if(!isFirst)history.push({role:'user',content:userMsg});
+    history.push({role:'assistant',content:reply});
+    if(history.length>30)history=history.slice(-30);
+  }catch(e){typingBub.textContent='（通信エラー）';typingBub.classList.remove('typing');}
+  sending=false;document.getElementById('send-btn').disabled=false;
+}
+document.getElementById('send-btn').onclick=send;
+document.getElementById('msg-input').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}});
+function send(){const input=document.getElementById('msg-input');const text=input.value.trim();if(!text||sending)return;input.value='';input.style.height='auto';addBubble(text,true);sendAI(text);}
+document.getElementById('msg-input').addEventListener('input',function(){this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px';});
+</script>
+</body>
+</html>
