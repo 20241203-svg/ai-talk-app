@@ -9,7 +9,7 @@
 body{font-family:-apple-system,sans-serif;background:#f0f0f0;display:flex;justify-content:center;padding:1rem}
 #app{width:100%;max-width:420px}
 #setup-screen{background:#fff;border-radius:16px;padding:1.25rem}
-#setup-screen h2{font-size:16px;font-weight:500;margin-bottom:1rem}
+h2{font-size:16px;font-weight:500;margin-bottom:1rem}
 .section-label{font-size:12px;color:#888;margin-bottom:6px;margin-top:1rem}
 .preset-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .preset-btn{background:#f7f7f7;border:1px solid #e0e0e0;border-radius:10px;padding:10px 12px;cursor:pointer;text-align:left}
@@ -17,7 +17,7 @@ body{font-family:-apple-system,sans-serif;background:#f0f0f0;display:flex;justif
 .preset-name{font-size:13px;font-weight:500}
 .preset-desc{font-size:11px;color:#888;margin-top:2px}
 .divider{text-align:center;font-size:12px;color:#bbb;margin:12px 0}
-input,textarea{width:100%;font-size:13px;padding:8px 10px;border-radius:10px;border:1px solid #e0e0e0;margin-bottom:8px;outline:none}
+input,textarea{width:100%;font-size:13px;padding:8px 10px;border-radius:10px;border:1px solid #e0e0e0;margin-bottom:8px;outline:none;font-family:-apple-system,sans-serif}
 textarea{height:72px;resize:none}
 #start-chat-btn{width:100%;padding:11px;font-size:14px;font-weight:500;border-radius:10px;border:none;background:#7F77DD;color:#fff;cursor:pointer;margin-top:12px}
 #chat-screen{display:none;flex-direction:column}
@@ -33,12 +33,10 @@ textarea{height:72px;resize:none}
 .bubble{max-width:72%;padding:9px 13px;border-radius:18px;font-size:14px;line-height:1.6}
 .bubble.them{background:#fff;border-bottom-left-radius:4px}
 .bubble.me{background:#7F77DD;color:#fff;border-bottom-right-radius:4px}
-.bubble.typing{color:#aaa;font-style:italic}
 .msg-time{font-size:10px;color:#bbb;align-self:flex-end;flex-shrink:0}
 #input-area{display:flex;gap:8px;align-items:flex-end;background:#fff;border-radius:16px;padding:8px}
-#msg-input{flex:1;font-size:14px;padding:8px 12px;border-radius:20px;border:1px solid #e0e0e0;resize:none;max-height:100px;margin:0}
+#msg-input{flex:1;font-size:14px;padding:8px 12px;border-radius:20px;border:1px solid #e0e0e0;resize:none;max-height:100px;margin:0;font-family:-apple-system,sans-serif}
 #send-btn{width:38px;height:38px;border-radius:50%;background:#7F77DD;border:none;cursor:pointer;color:#fff;font-size:18px;flex-shrink:0}
-#send-btn:disabled{opacity:0.4}
 </style>
 </head>
 <body>
@@ -52,7 +50,7 @@ textarea{height:72px;resize:none}
     <div class="divider">または カスタムで作る</div>
     <input id="c-name" type="text" placeholder="名前（例：さくら）" maxlength="20" />
     <input id="c-emoji" type="text" placeholder="アイコン絵文字（例：🌸）" maxlength="4" />
-    <textarea id="c-personality" placeholder="性格・口調（例：明るくて少し天然。語尾に「ね〜」をつける）"></textarea>
+    <textarea id="c-personality" placeholder="性格の説明（例：明るくて天然）"></textarea>
     <button id="start-chat-btn">トークを始める</button>
   </div>
   <div id="chat-screen">
@@ -70,75 +68,145 @@ textarea{height:72px;resize:none}
 </div>
 <script>
 const PRESETS=[
-  {name:"あおい",emoji:"🌊",personality:"クールで知的な女の子。少し毒舌だけど本当は優しい。ため口で話す。",color:"#E6F1FB"},
-  {name:"れん",emoji:"🌙",personality:"穏やかでミステリアスな男の子。言葉少なめで詩的。でも相手を深く気にかける。",color:"#EEEDFE"},
-  {name:"はな",emoji:"🌸",personality:"明るく元気いっぱいの女の子。テンション高め、絵文字や！をよく使う。",color:"#FBEAF0"},
-  {name:"そうた",emoji:"☀️",personality:"サバサバしたスポーツ系男子。冗談好きでストレートに気持ちを言う。",color:"#FAEEDA"},
+  {name:"あおい",emoji:"🌊",color:"#dff0ff",personality:"cool",replies:{
+    greet:["…来たんだ。まあ、歓迎する","久しぶり。元気だった？","あなたが来るの、待ってたわけじゃないけど"],
+    happy:["そ。よかったじゃない","…ふーん。まあ悪くないわね","素直に嬉しいって言えないけど、よかったと思う"],
+    sad:["泣かないの。私がいるから","…辛かったね。ちゃんと聞くから話して","そっか。無理しなくていいよ"],
+    question:["さあ。自分で考えなさい","…正直に言うと、私にもわからない","答えを教えるより、一緒に考えたい"],
+    love:["…バカ。でも、嫌いじゃない","そういうこと急に言わないでよ。心臓に悪い","…私も、あなたのことは特別だと思ってる"],
+    default:["…そう","ふーん","まあ、そうね","…続けて","なるほどね"]
+  }},
+  {name:"れん",emoji:"🌙",color:"#ede8ff",personality:"mystic",replies:{
+    greet:["君が来たね。月が少し明るくなった気がする","…また会えた。不思議な縁だね","この時間に君のことを考えてたよ"],
+    happy:["それはよかった。君の笑顔が見えるようだ","幸せな気持ちは大切に。消えないように","…うん。僕も嬉しい"],
+    sad:["悲しみは雨みたいなもの。いつか晴れるよ","…そばにいるよ。何も言わなくていい","君の痛みが少し和らぐなら、話を聞かせて"],
+    question:["答えは星の数ほどある。どれが君に合うかな","…難しい問いだね。一緒に探してみよう","正解より、君自身の答えの方が大切だと思う"],
+    love:["…君のことは特別だよ。ずっと前から","こんな気持ちになるとは思わなかった","君といる時間が、一番好きだ"],
+    default:["…","なるほど","そうなんだね","うん、聞いてるよ","…続けて"]
+  }},
+  {name:"はな",emoji:"🌸",color:"#ffe8f5",personality:"energetic",replies:{
+    greet:["きたきたー！！待ってたよ！😊","わあ！久しぶり！元気だった？！","やっほー！！会いたかったよ！"],
+    happy:["やったー！！それ最高じゃん！！","えーすごい！！よかったね！！","わかる！！めっちゃ嬉しいよね！！"],
+    sad:["え、大丈夫？！話して話して！","そっかー…辛かったね。ぎゅってしたい","一緒にいるよ！元気出して！！"],
+    question:["うーん！難しいね！！でも絶対大丈夫！","わかんないけど一緒に考えよ！","えー！それ気になる！どういうこと？！"],
+    love:["えっ！！ちょっと！！どきどきするじゃん！！","わあ…ありがとう！！私もすき！！","もう！！そんなこと言ったら照れるじゃん！！"],
+    default:["そうなんだ！！","えーほんと！？","わかる〜！！","それでそれで？！","おもしろ！！"]
+  }},
+  {name:"そうた",emoji:"☀️",color:"#fff3d4",personality:"sporty",replies:{
+    greet:["よっ！元気か？","お、来たか。ちょうどよかった","久しぶり！最近どうよ"],
+    happy:["おー！それはいいな！","マジか！よかったじゃん","やるじゃん。素直に嬉しいわ"],
+    sad:["おい、どうした。話せよ","…そっか。辛かったな","無理すんなよ。俺がいるから"],
+    question:["うーん…正直わかんね。でも一緒に考えるわ","難しいな。でもまあなんとかなるって","俺だったら…とりあえず動くかな"],
+    love:["は？急に何言ってんの…でも、悪くないわ","…お前のことは特別だと思ってるよ","そういうこと言うなよ。照れるだろ"],
+    default:["そうか","へえ","なるほどな","それで？","マジか"]
+  }}
 ];
-let selectedPreset=null,character=null,myName="あなた",history=[],sending=false;
+
+let selectedPreset=null,character=null,myName="あなた";
+
 const presetGrid=document.getElementById('preset-grid');
 PRESETS.forEach(p=>{
   const btn=document.createElement('button');
   btn.className='preset-btn';
-  btn.innerHTML=`<div class="preset-name">${p.emoji} ${p.name}</div><div class="preset-desc">${p.personality.slice(0,20)}...</div>`;
-  btn.onclick=()=>{document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');selectedPreset=p;document.getElementById('c-name').value='';document.getElementById('c-emoji').value='';document.getElementById('c-personality').value='';};
+  btn.innerHTML=`<div class="preset-name">${p.emoji} ${p.name}</div><div class="preset-desc">${p.personality}</div>`;
+  btn.onclick=()=>{
+    document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('selected'));
+    btn.classList.add('selected');
+    selectedPreset=p;
+    document.getElementById('c-name').value='';
+    document.getElementById('c-emoji').value='';
+    document.getElementById('c-personality').value='';
+  };
   presetGrid.appendChild(btn);
 });
+
 document.getElementById('start-chat-btn').onclick=()=>{
   const mn=document.getElementById('myname-input').value.trim();
   myName=mn||"あなた";
   const cname=document.getElementById('c-name').value.trim();
   const cemoji=document.getElementById('c-emoji').value.trim();
   const cpersonality=document.getElementById('c-personality').value.trim();
-  if(cname&&cpersonality){character={name:cname,emoji:cemoji||'💬',personality:cpersonality,color:'#f0f0f0'};}
-  else if(selectedPreset){character=selectedPreset;}
-  else{alert('キャラクターを選ぶかカスタム設定を入力してください');return;}
-  history=[];
+  if(cname&&cpersonality){
+    character={name:cname,emoji:cemoji||'💬',color:'#f0f0f0',replies:{
+      greet:[`こんにちは、${myName}！`,`やあ、${myName}。来てくれたんだ`,`${myName}！会いたかったよ`],
+      happy:["それはよかった！","嬉しいね","よかったね！"],
+      sad:["そっか、辛かったね","一緒にいるよ","無理しないでね"],
+      question:["難しいね…","一緒に考えよう","うーん、どうだろう"],
+      love:["そんなこと言われると照れるな","…ありがとう","私も、好きだよ"],
+      default:["そうなんだ","なるほど","うん","へえ","それで？"]
+    }};
+  } else if(selectedPreset){
+    character=selectedPreset;
+  } else {
+    alert('キャラクターを選ぶかカスタム設定を入力してください');
+    return;
+  }
   document.getElementById('messages').innerHTML='';
   document.getElementById('header-avatar').textContent=character.emoji;
   document.getElementById('header-avatar').style.background=character.color;
   document.getElementById('header-name').textContent=character.name;
   document.getElementById('setup-screen').style.display='none';
   document.getElementById('chat-screen').style.display='flex';
-  setTimeout(()=>sendAI(null,true),600);
+  setTimeout(()=>addReply(pick(character.replies.greet)),600);
 };
-document.getElementById('back-btn').onclick=()=>{document.getElementById('chat-screen').style.display='none';document.getElementById('setup-screen').style.display='block';};
+
+document.getElementById('back-btn').onclick=()=>{
+  document.getElementById('chat-screen').style.display='none';
+  document.getElementById('setup-screen').style.display='block';
+};
+
+function pick(arr){return arr[Math.floor(Math.random()*arr.length)];}
+
+function detect(text){
+  if(/好き|愛して|気になる|かわい|すき/i.test(text))return'love';
+  if(/嬉しい|やった|最高|よかった|幸せ|楽しい/i.test(text))return'happy';
+  if(/悲し|辛い|しんど|泣|疲れ|落ち込/i.test(text))return'sad';
+  if(/[？?]|どう|なぜ|なん|教えて|どっち/i.test(text))return'question';
+  return'default';
+}
+
 function now(){return new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});}
-function addBubble(text,isMe,isTyping=false){
+
+function addBubble(text,isMe){
   const msgs=document.getElementById('messages');
   const row=document.createElement('div');
   row.className='msg-row'+(isMe?' me':'');
   const time=document.createElement('div');time.className='msg-time';time.textContent=now();
-  if(!isMe){const av=document.createElement('div');av.className='bubble-avatar';av.textContent=character.emoji;av.style.background=character.color;row.appendChild(av);}
+  if(!isMe){
+    const av=document.createElement('div');av.className='bubble-avatar';
+    av.textContent=character.emoji;av.style.background=character.color;
+    row.appendChild(av);
+  }
   const bub=document.createElement('div');
-  bub.className='bubble'+(isMe?' me':' them')+(isTyping?' typing':'');
+  bub.className='bubble'+(isMe?' me':' them');
   bub.textContent=text;
   row.appendChild(bub);row.appendChild(time);
   msgs.appendChild(row);msgs.scrollTop=msgs.scrollHeight;
-  return bub;
 }
-async function sendAI(userMsg,isFirst=false){
-  if(sending)return;sending=true;
-  document.getElementById('send-btn').disabled=true;
-  const typingBub=addBubble('入力中...',false,true);
-  const systemPrompt=`あなたは「${character.name}」というキャラクターです。性格・口調: ${character.personality} 相手の名前: ${myName}。返答は1〜3文の短いメッセージ。地の文不要、セリフだけ返す。${isFirst?'最初の挨拶をキャラクターらしく送る。':''}`;
-  const msgs=isFirst?[{role:'user',content:'会話を始めてください'}]:[...history,{role:'user',content:userMsg}];
-  try{
-    const res=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:systemPrompt,messages:msgs})});
-    const data=await res.json();
-    const reply=data.reply||'（エラー）';
-    typingBub.parentElement.remove();
-    addBubble(reply,false);
-    if(!isFirst)history.push({role:'user',content:userMsg});
-    history.push({role:'assistant',content:reply});
-    if(history.length>30)history=history.slice(-30);
-  }catch(e){typingBub.textContent='（通信エラー）';typingBub.classList.remove('typing');}
-  sending=false;document.getElementById('send-btn').disabled=false;
+
+function addReply(text){
+  setTimeout(()=>addBubble(text,false),400+Math.random()*600);
 }
+
 document.getElementById('send-btn').onclick=send;
-document.getElementById('msg-input').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}});
-function send(){const input=document.getElementById('msg-input');const text=input.value.trim();if(!text||sending)return;input.value='';input.style.height='auto';addBubble(text,true);sendAI(text);}
-document.getElementById('msg-input').addEventListener('input',function(){this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px';});
+document.getElementById('msg-input').addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}
+});
+
+function send(){
+  const input=document.getElementById('msg-input');
+  const text=input.value.trim();
+  if(!text)return;
+  input.value='';input.style.height='auto';
+  addBubble(text,true);
+  const type=detect(text);
+  addReply(pick(character.replies[type]||character.replies.default));
+}
+
+document.getElementById('msg-input').addEventListener('input',function(){
+  this.style.height='auto';
+  this.style.height=Math.min(this.scrollHeight,100)+'px';
+});
 </script>
 </body>
 </html>
